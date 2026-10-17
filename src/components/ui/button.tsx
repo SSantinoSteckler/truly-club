@@ -12,7 +12,7 @@ export const Button = forwardRef<HTMLButtonElement, Props>(function Button(
       ref={ref}
       disabled={disabled || loading}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-[var(--radius-small)] border font-semibold outline-none disabled:cursor-not-allowed disabled:opacity-40",
+        "inline-flex cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-small)] border font-semibold outline-none disabled:cursor-not-allowed disabled:opacity-40",
         variant === "primary" && "border-brand bg-brand text-background hover:-translate-y-0.5 hover:bg-brand-strong",
         variant === "secondary" && "border-line bg-transparent text-foreground hover:border-foreground",
         variant === "ghost" && "border-transparent border-b-line bg-transparent px-0 text-foreground hover:border-b-foreground",

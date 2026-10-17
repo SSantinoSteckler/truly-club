@@ -1,21 +1,36 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { getEffectiveRoomStatus, isRoomActive } from "./is-room-active";
+import { roomSchema } from "./validation";
 
-const room = { status: "live" as const, start_at: "2026-08-25T20:00:00Z", end_at: "2026-08-26T02:00:00Z" };
+const room = { status: "live" as const, start_at: null, end_at: null };
 
-describe("isRoomActive", () => {
-  it("activates scheduled and live rooms automatically inside their window", () => {
-    expect(isRoomActive(room, new Date("2026-08-25T22:00:00Z"))).toBe(true);
-    expect(isRoomActive({ ...room, status: "scheduled" }, new Date("2026-08-25T22:00:00Z"))).toBe(true);
+describe("permanent room access", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("keeps an open room available across days and years", () => {
+    vi.useFakeTimers();
+    for (const date of ["2026-10-16T22:00:00Z", "2026-10-17T05:00:00Z", "2030-01-01T00:00:00Z"]) {
+      vi.setSystemTime(new Date(date));
+      expect(isRoomActive(room)).toBe(true);
+      expect(getEffectiveRoomStatus(room)).toBe("live");
+    }
   });
-  it("rejects drafts and ended windows", () => {
-    expect(isRoomActive({ ...room, status: "draft" }, new Date("2026-08-25T22:00:00Z"))).toBe(false);
-    expect(isRoomActive(room, new Date("2026-08-26T02:00:00Z"))).toBe(false);
+
+  it("blocks access while paused and restores it only when reopened", () => {
+    expect(isRoomActive({ ...room, status: "draft" })).toBe(false);
+    expect(getEffectiveRoomStatus({ ...room, status: "draft" })).toBe("draft");
+    expect(isRoomActive({ ...room, status: "live" })).toBe(true);
   });
-  it("derives scheduled, live and ended labels from the clock", () => {
-    const scheduled = { ...room, status: "scheduled" as const };
-    expect(getEffectiveRoomStatus(scheduled, new Date("2026-08-25T19:59:00Z"))).toBe("scheduled");
-    expect(getEffectiveRoomStatus(scheduled, new Date("2026-08-25T22:00:00Z"))).toBe("live");
-    expect(getEffectiveRoomStatus(scheduled, new Date("2026-08-26T02:00:00Z"))).toBe("ended");
+
+  it("does not automatically reopen legacy unavailable states", () => {
+    for (const status of ["scheduled", "ended", "cancelled"] as const) {
+      expect(isRoomActive({ status })).toBe(false);
+    }
+  });
+
+  it("allows creation without dates but still requires a valid name and place", () => {
+    expect(roomSchema.safeParse({ name: "Mi bar", venueId: "" }).success).toBe(true);
+    expect(roomSchema.safeParse({ name: "", venueId: "" }).success).toBe(false);
+    expect(roomSchema.safeParse({ name: "Mi bar", venueId: "not-a-venue" }).success).toBe(false);
   });
 });

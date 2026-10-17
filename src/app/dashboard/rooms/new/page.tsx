@@ -9,7 +9,7 @@ export default async function NewRoomPage() {
   const { data } = await supabase.from("venues").select("*").eq("organization_id", organization!.id).order("name");
   return (
     <>
-      <PageHeader eyebrow="Crear / sala" title="Dale un lugar digital al encuentro." description="Tres decisiones. Después Truly prepara el acceso y deja listo el QR para que comiences cuando quieras." />
+      <PageHeader eyebrow="Crear sala" title="Tu lugar, siempre conectado." description="Creá una sala permanente y compartí el mismo QR todos los días, sin definir fechas ni horarios." />
       <div className="max-w-4xl"><RoomForm organizationId={organization!.id} venues={data ?? []} /></div>
     </>
   );

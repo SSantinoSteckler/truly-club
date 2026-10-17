@@ -14,9 +14,7 @@ export const roomSchema = z.object({
   name: z.string().trim().min(2).max(120),
   description: z.string().trim().max(600).optional(),
   venueId: z.string().uuid().optional().or(z.literal("")),
-  startAt: z.string().min(1, "Indicá el inicio"),
-  endAt: z.string().min(1, "Indicá el final"),
-}).refine((value) => new Date(value.endAt) > new Date(value.startAt), { message: "El final debe ser posterior al inicio", path: ["endAt"] });
+});
 
 export const profileSchema = z.object({
   displayName: z.string().trim().min(1).max(60),

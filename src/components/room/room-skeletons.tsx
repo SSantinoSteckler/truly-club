@@ -63,8 +63,11 @@ export function DiscoverySkeleton() {
 export function LikesSkeleton() {
   return (
     <LoadingFrame label="Cargando likes">
-      <ScreenHeadingSkeleton action />
-      <div className="grid grid-cols-2 gap-3">{Array.from({ length: 4 }).map((_, index) => <div key={index} className="overflow-hidden rounded-[1.35rem] bg-white/[.04]"><Block className="aspect-[4/5] w-full rounded-none" /><div className="p-3"><Block className="h-5 w-3/4 rounded-full" /><Block className="mt-2 h-2.5 w-1/2 rounded-full" /></div></div>)}</div>
+      <header className="flex items-end justify-between gap-4 px-1 pb-6 pt-2">
+        <div className="flex-1"><Block className="h-9 w-24 rounded-xl" /><Block className="mt-3 h-3 w-52 max-w-full rounded-full" /></div>
+        <Block className="size-11 shrink-0 rounded-full" />
+      </header>
+      <div className="grid grid-cols-2 gap-3">{Array.from({ length: 4 }).map((_, index) => <article key={index} className="overflow-hidden rounded-[1.35rem] bg-white/[.06]"><Block className="aspect-[4/5] w-full rounded-none" /><div className="p-3"><div className="flex items-center justify-between gap-2"><Block className={cn("h-5 rounded-full", index % 2 === 0 ? "w-3/5" : "w-4/5")} /><Block className="size-4 shrink-0 rounded-full" /></div><Block className="mt-2 h-2.5 w-20 max-w-1/2 rounded-full" /></div></article>)}</div>
     </LoadingFrame>
   );
 }

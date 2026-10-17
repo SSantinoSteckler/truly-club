@@ -1,31 +1,27 @@
 "use client";
 
-import { Check, Copy, Download, Printer } from "lucide-react";
-import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { Check, Copy, Download } from "lucide-react";
+import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 function isLocalUrl(value: string) { try { return LOCAL_HOSTS.has(new URL(value).hostname); } catch { return false; } }
 
 export function RoomQr({ url, roomName }: { url: string; roomName: string }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [roomUrl, setRoomUrl] = useState(url);
-  const [qrPreview, setQrPreview] = useState<string>();
+  const [qrResult, setQrResult] = useState<{ url: string; markup?: string; failed?: boolean }>({ url: "" });
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
     let cancelled = false;
-    void QRCode.toCanvas(canvas, roomUrl, { width: 520, margin: 2, color: { dark: "#070707", light: "#ffffff" }, errorCorrectionLevel: "H" })
-      .then(() => { if (!cancelled) setQrPreview(canvas.toDataURL("image/png")); });
+    void QRCode.toString(roomUrl, { type: "svg", width: 1024, margin: 4, color: { dark: "#070707", light: "#ffffff" }, errorCorrectionLevel: "M" })
+      .then((markup) => { if (!cancelled) setQrResult({ url: roomUrl, markup }); })
+      .catch(() => { if (!cancelled) setQrResult({ url: roomUrl, failed: true }); });
     return () => { cancelled = true; };
   }, [roomUrl]);
   async function copy() { await navigator.clipboard.writeText(roomUrl); setCopied(true); window.setTimeout(() => setCopied(false), 1600); }
-  function png() { const link = document.createElement("a"); link.download = `${roomName.toLowerCase().replace(/\s+/g, "-")}-truly-qr.png`; link.href = canvasRef.current?.toDataURL("image/png") ?? ""; link.click(); }
-  async function svg() { const content = await QRCode.toString(roomUrl, { type: "svg", margin: 2, errorCorrectionLevel: "H" }); const blob = new Blob([content], { type: "image/svg+xml" }); const link = document.createElement("a"); link.download = `${roomName.toLowerCase().replace(/\s+/g, "-")}-truly-qr.svg`; link.href = URL.createObjectURL(blob); link.click(); window.setTimeout(() => URL.revokeObjectURL(link.href), 1000); }
-  function print() { const image = canvasRef.current?.toDataURL("image/png"); if (!image) return; const popup = window.open("", "truly-qr", "width=700,height=850"); if (!popup) return; const brand = new URL("/assets/logo-truly-sin-fondo.png", window.location.origin).toString(); popup.document.write(`<html><head><title>QR ${escapeHtml(roomName)}</title><style>body{font-family:Arial,sans-serif;text-align:center;padding:48px;color:#070707}.brand{display:block;width:52px;height:38px;object-fit:cover;object-position:center;margin:0 auto}h1{font-size:48px;margin:18px 0}.qr{width:480px;max-width:90%}p{font-size:12px}</style></head><body><img class="brand" src="${escapeHtml(brand)}" alt="Truly"/><h1>${escapeHtml(roomName)}</h1><img class="qr" src="${image}"/><p>${escapeHtml(roomUrl)}</p></body></html>`); popup.document.close(); popup.focus(); popup.print(); }
+  async function png() { const image = await QRCode.toDataURL(roomUrl, { width: 1024, margin: 4, color: { dark: "#070707", light: "#ffffff" }, errorCorrectionLevel: "M" }); download(image, `${fileName(roomName)}-truly-qr.png`); }
+  async function svg() { const content = await QRCode.toString(roomUrl, { type: "svg", width: 1024, margin: 4, color: { dark: "#070707", light: "#ffffff" }, errorCorrectionLevel: "M" }); const blobUrl = URL.createObjectURL(new Blob([content], { type: "image/svg+xml" })); download(blobUrl, `${fileName(roomName)}-truly-qr.svg`); window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000); }
 
   return (
     <div className="min-w-0 overflow-hidden rounded-2xl border border-white/[.07] bg-white/[.04] p-4 sm:p-5">
@@ -38,16 +34,16 @@ export function RoomQr({ url, roomName }: { url: string; roomName: string }) {
         <div className="order-2 min-w-0 lg:order-1">
           <label className="block" htmlFor="room-share-url"><span className="mb-2 block text-xs font-semibold text-white/45">Link de acceso</span><input id="room-share-url" className="control font-mono text-xs" type="url" value={roomUrl} onChange={(event) => setRoomUrl(event.target.value)} /></label>
           {isLocalUrl(roomUrl) && <div className="mt-3 rounded-xl bg-[#f7b955]/10 px-4 py-3 text-xs leading-5 text-[#f7c875]"><strong>Este link usa localhost.</strong> Reemplazalo por la IP local de tu PC o configurá NEXT_PUBLIC_SITE_URL con el dominio HTTPS.</div>}
-          <div className="mt-4 grid grid-cols-2 gap-2"><QrAction icon={copied ? Check : Copy} onClick={copy}>{copied ? "Copiado" : "Copiar"}</QrAction><QrAction icon={Download} onClick={png}>PNG</QrAction><QrAction icon={Download} onClick={svg}>SVG</QrAction><QrAction icon={Printer} onClick={print}>Imprimir</QrAction></div>
+          <div className="mt-4 grid grid-cols-3 gap-2"><QrAction icon={copied ? Check : Copy} onClick={copy}>{copied ? "Copiado" : "Copiar"}</QrAction><QrAction icon={Download} onClick={png}>PNG</QrAction><QrAction icon={Download} onClick={svg}>SVG</QrAction></div>
         </div>
         <div className="order-1 mx-auto aspect-square w-full max-w-[20rem] overflow-hidden rounded-xl bg-white p-3 lg:order-2">
-          {qrPreview ? <Image unoptimized src={qrPreview} width={520} height={520} alt={`Código QR para ${roomName}`} className="block aspect-square size-full object-contain" /> : <div className="aspect-square size-full animate-pulse bg-black/[.06]" aria-label="Generando código QR" />}
-          <canvas ref={canvasRef} width={520} height={520} className="hidden" aria-hidden />
+          {qrResult.url === roomUrl && qrResult.markup ? <div role="img" aria-label={`Código QR para ${roomName}`} className="aspect-square size-full [&_svg]:block [&_svg]:size-full" dangerouslySetInnerHTML={{ __html: qrResult.markup }} /> : qrResult.url === roomUrl && qrResult.failed ? <div className="grid aspect-square size-full place-items-center px-6 text-center text-xs leading-5 text-black/55">No pudimos generar el QR. Revisá el link de acceso.</div> : <div className="aspect-square size-full animate-pulse bg-black/[.06]" aria-label="Generando código QR" />}
         </div>
       </div>
     </div>
   );
 }
 
-function QrAction({ children, icon: Icon, onClick }: { children: React.ReactNode; icon: typeof Copy; onClick: () => void }) { return <button type="button" onClick={onClick} className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white/[.07] px-3 text-sm font-semibold text-white/65 hover:bg-white/[.11] hover:text-white"><Icon className="size-4" strokeWidth={1.8} aria-hidden />{children}</button>; }
-function escapeHtml(value: string) { return value.replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character] ?? character); }
+function QrAction({ children, icon: Icon, onClick }: { children: React.ReactNode; icon: typeof Copy; onClick: () => void | Promise<void> }) { return <button type="button" onClick={onClick} className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white/[.07] px-3 text-sm font-semibold text-white/65 hover:bg-white/[.11] hover:text-white"><Icon className="size-4" strokeWidth={1.8} aria-hidden />{children}</button>; }
+function download(href: string, name: string) { const link = document.createElement("a"); link.download = name; link.href = href; link.click(); }
+function fileName(value: string) { return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "sala"; }

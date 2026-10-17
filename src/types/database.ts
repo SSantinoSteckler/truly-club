@@ -28,7 +28,7 @@ export interface ProfileRow {
 export interface OrganizationRow { id: string; name: string; slug: string; created_by: string; created_at: string; updated_at: string }
 export interface MembershipRow { organization_id: string; user_id: string; role: OrganizationRole; created_at: string }
 export interface VenueRow { id: string; organization_id: string; name: string; address: string | null; city: string; created_at: string; updated_at: string }
-export interface RoomRow { id: string; organization_id: string; venue_id: string | null; name: string; slug: string; description: string | null; start_at: string; end_at: string; status: RoomStatus; access_code: string; created_at: string; updated_at: string }
+export interface RoomRow { id: string; organization_id: string; venue_id: string | null; name: string; slug: string; description: string | null; start_at: string | null; end_at: string | null; status: RoomStatus; access_code: string; created_at: string; updated_at: string }
 export interface PresenceRow { id: string; room_id: string; user_id: string; joined_at: string; last_seen_at: string; left_at: string | null; active: boolean }
 export interface InterestRow { id: string; slug: string; label: string; active: boolean; sort_order: number; created_at: string }
 export interface IntentRow { id: string; key: string; label: string; color: string; sort_order: number; active: boolean; created_at: string }
@@ -39,7 +39,7 @@ export interface BlockRow { id: string; blocker_user_id: string; blocked_user_id
 export interface ReasonRow { id: string; key: string; label: string; active: boolean; sort_order: number }
 export interface ReportRow { id: string; reporter_user_id: string; reported_user_id: string; room_id: string; reason_id: string; description: string | null; status: ReportStatus; reviewed_by: string | null; reviewed_at: string | null; created_at: string }
 
-export interface PublicRoom { id: string; name: string; slug: string; description: string | null; start_at: string; end_at: string; status: RoomStatus; venue_name: string | null; venue_city: string | null }
+export interface PublicRoom { id: string; name: string; slug: string; description: string | null; start_at: string | null; end_at: string | null; status: RoomStatus; venue_name: string | null; venue_city: string | null }
 export interface DiscoveryProfile { id: string; display_name: string; age: number | null; avatar_path: string | null; bio: string | null; intent_label: string | null; intent_color: string | null; interests: Array<{ id: string; label: string }> }
 export interface RoomMatch { match_id: string; matched_at: string; user_id: string; display_name: string; age: number | null; avatar_path: string | null; intent_label: string | null }
 export interface ReceivedLike { like_id: string; liked_at: string; user_id: string; display_name: string; avatar_path: string | null }

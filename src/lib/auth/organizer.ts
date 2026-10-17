@@ -1,7 +1,6 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
-import { syncOrganizationRoomLifecycle } from "@/lib/rooms/lifecycle";
 import { createClient } from "@/lib/supabase/server";
 import type { OrganizationRow, OrganizationRole } from "@/types/database";
 
@@ -22,7 +21,6 @@ export async function getOrganizerContext(options: { requireOrganization?: boole
   if (membership) {
     const result = await supabase.from("organizations").select("*").eq("id", membership.organization_id).single();
     organization = result.data;
-    if (organization) await syncOrganizationRoomLifecycle(supabase, organization.id);
   }
   if (options.requireOrganization && !organization) redirect("/dashboard/organization");
   return { userId: user.id, email: user.email ?? null, organization, role: membership?.role ?? null };

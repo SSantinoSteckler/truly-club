@@ -24,8 +24,7 @@ if (!org.data) throw org.error;
 await supabase.from("organization_members").insert({ organization_id: org.data.id, user_id: owner.id, role: "owner" });
 const venue = await supabase.from("venues").insert({ organization_id: org.data.id, name: "Club Demo", address: "Av. Demo 123", city: "Buenos Aires" }).select("id").single();
 if (!venue.data) throw venue.error;
-const start = new Date(Date.now() - 60 * 60_000); const end = new Date(Date.now() + 5 * 60 * 60_000);
-const room = await supabase.from("rooms").insert({ organization_id: org.data.id, venue_id: venue.data.id, name: "Friday Night", slug: "friday-night-demo", description: "Sala creada por el seed opcional de desarrollo.", start_at: start.toISOString(), end_at: end.toISOString(), status: "live" }).select("id").single();
+const room = await supabase.from("rooms").insert({ organization_id: org.data.id, venue_id: venue.data.id, name: "Friday Night", slug: "friday-night-demo", description: "Sala permanente creada por el seed opcional de desarrollo.", start_at: null, end_at: null, status: "live" }).select("id").single();
 if (!room.data) throw room.error;
 
 const intents = await supabase.from("profile_intents").select("id,key"); const interests = await supabase.from("interests").select("id").order("sort_order");

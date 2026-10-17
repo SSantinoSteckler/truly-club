@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+@layer base {
+  button:enabled,
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
+
 :root {
   --font-ui: var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-bricolage-grotesque), var(--font-ui);

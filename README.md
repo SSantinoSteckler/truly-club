@@ -1,6 +1,6 @@
 # Truly
 
-Truly transforma un lugar físico o evento en una red social temporal. El organizador crea una sala y comparte un QR; los asistentes entran desde el navegador, se registran con email, crean su perfil, descubren a las personas presentes y pueden dar likes, bloquear y reportar.
+Truly transforma un lugar físico en un espacio para conectar a las personas presentes. El negocio crea una sala permanente y comparte siempre el mismo QR; los asistentes entran desde el navegador, crean su perfil, descubren a las personas activas y pueden dar likes, bloquear y reportar.
 
 Esta implementación fue creada desde cero. No contiene URLs, IDs, secretos, APIs ni código de una versión anterior. Usa exclusivamente un proyecto Supabase que vos controles y un frontend desplegable en Vercel.
 
@@ -111,7 +111,9 @@ Abrí [http://localhost:3000](http://localhost:3000). El recorrido principal es:
 5. `/dashboard/rooms/[id]`: revisar el estado, copiar link y descargar o imprimir QR.
 6. `/r/[slug]`: registrarse o iniciar sesión y entrar como asistente.
 
-Las salas nuevas quedan `scheduled`: pasan automáticamente a `live` al llegar `start_at` y a `ended` al llegar `end_at`. El dashboard y la bienvenida del QR actualizan el estado cada 15 segundos mientras están visibles. Las funciones SQL siempre validan la ventana temporal, por lo que al finalizar se corta discovery, presencia y nuevos likes aunque nadie tenga el dashboard abierto. La migration `202608260006_automatic_room_lifecycle.sql` contiene estas reglas y debe aplicarse con `npx supabase db push` en proyectos ya creados.
+Las salas son permanentes: se crean abiertas (`live`), sin fechas de inicio ni fin. El negocio puede pausarlas (`draft`), volver a abrirlas con el mismo QR o eliminarlas con confirmación. Pausar bloquea el ingreso y desactiva las presencias; reabrir no vuelve a conectar automáticamente a quienes habían salido. Los perfiles visibles siguen exigiendo presencia activa y un heartbeat de los últimos 90 segundos.
+
+Antes de desplegar esta versión, aplicá `supabase/migrations/202610160001_permanent_rooms.sql` con `npx supabase db push`. La migración conserva IDs, slugs, QR e historial: convierte las salas efectivamente abiertas en permanentes abiertas y deja pausadas las demás. No borra cuentas ni interacciones. Los campos heredados `start_at` y `end_at` quedan en `null` y la base solo admite estados `live` y `draft` para las salas.
 
 ### Probar el QR desde un celular en desarrollo
 
